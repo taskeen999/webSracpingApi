@@ -15,30 +15,53 @@ namespace webSracpingApi.Controllers
             _logger = logger;
         }
 
-        [HttpPost("webscrape")]
-        public async Task<List<string>> webscrape( string website) {
-
-         List<string> result = new List<string>();
-            var web =  new HtmlWeb();
+        [HttpPost("Scrape")]
+        public async Task<IActionResult> Scrape(string website)
+        {
+            List<TeamStatus> teamsStatus = new List<TeamStatus>();
+            var web = new HtmlWeb();
             var htmldoc = web.Load(website);
-            var nodeElement = htmldoc.DocumentNode.SelectNodes("//div[@class='rankings-block__container full rankings-table']/table");
+            var nodeElement = htmldoc.DocumentNode.SelectNodes("//div[@class='rankings-block__container full rankings-table']/table/tbody" +
+                "//tr");
 
-            
+            int iter = 0;
             foreach (var node in nodeElement)
             {
+                if (iter != 0)
+                {
+                    var tds = node.InnerHtml;
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(tds);
+                    var t = doc.DocumentNode.SelectNodes("//td");
 
-                result .Add( node.InnerHtml.FirstOrDefault().ToString());
-              // node.FirstChild.Element().F
-                    
+                    doc.LoadHtml(t[1].InnerHtml);
+                    var spans = doc.DocumentNode.SelectNodes("//span");
 
+                    teamsStatus.Add(new TeamStatus
+                    {
+                        Position = t[0].InnerText.Trim(),
+                        Name = spans[1].InnerText,
+                        Matches = t[2].InnerText.Trim(),
+                        Points = t[3].InnerText.Trim(),
+                        Rating = t[4].InnerText.Trim()
+                    });
+                }
+                if (iter > 8)
+                    break;
+                iter++;
             }
 
-
-            
-
-
-            return result;
+            return Ok(teamsStatus);
         }
-        
+
+    }
+
+    public class TeamStatus
+    {
+        public string Position { get; set; }
+        public string Name { get; set; }
+        public string Matches { get; set; }
+        public string Points { get; set; }
+        public string Rating { get; set; }
     }
 }
