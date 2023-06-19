@@ -15,11 +15,14 @@ namespace webSracpingApi.Controllers
             _logger = logger;
         }
 
-        [HttpPost("Scrape")]
-        public async Task<IActionResult> Scrape(string website)
+        [HttpPost("TeamsRanking")]
+        public async Task<IActionResult> TeamsRanking(enFormat format)
         {
             List<TeamStatus> teamsStatus = new List<TeamStatus>();
+
+            string website = $"https://www.icc-cricket.com/rankings/mens/team-rankings/${format.ToString()}";
             var web = new HtmlWeb();
+
             var htmldoc = web.Load(website);
             var nodeElement = htmldoc.DocumentNode.SelectNodes("//div[@class='rankings-block__container full rankings-table']/table/tbody" +
                 "//tr");
@@ -63,5 +66,12 @@ namespace webSracpingApi.Controllers
         public string Matches { get; set; }
         public string Points { get; set; }
         public string Rating { get; set; }
+    }
+
+    public enum enFormat
+    {
+        t20i = 1,
+        odi = 2,
+        test = 3
     }
 }
